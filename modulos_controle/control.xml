@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<MODULE texec="100">
+
+    <SAVEHISTORY>1000</SAVEHISTORY>
+
+    <!-- ================================================================== -->
+	<!--                    Secador de leito fluidizado                     -->
+    <!-- ================================================================== -->
+        <!--Input's-->
+            <INPUT name="vazao_gas_in">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_gas</ADDRESS>
+            </INPUT>
+
+            <INPUT name="vazao_ve21_in">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_ve21</ADDRESS>
+            </INPUT>
+
+            <INPUT name="vel_alim_in">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.vel_alim</ADDRESS>
+            </INPUT>
+
+        <!-- SP (Temperatura de saída) -->
+            <INPUT name="tempsaida_sp">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempsaida_sp</ADDRESS>
+            </INPUT>
+
+        <!-- SP (Temperatura da câmara livre) -->
+            <INPUT name="tempcl_sp">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempcl_sp</ADDRESS>
+            </INPUT>
+
+        <!-- SP (Temperatura da caixa devento) -->
+            <INPUT name="tempcv_sp">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempcv_sp</ADDRESS>
+            </INPUT>  
+
+        <!-- PV (Temperatura de saída) -->
+            <INPUT name="tempsaida_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempsaida_pv</ADDRESS>
+            </INPUT>
+
+        <!-- PV (Temperatura da câmara livre) -->
+            <INPUT name="tempcl_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempcl_pv</ADDRESS>
+            </INPUT>
+
+        <!-- PV (Temperatura da caixa devento) -->
+            <INPUT name="tempcv_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempcv_pv</ADDRESS>
+            </INPUT>
+
+        <!-- PV (Temperatura de entrada) -->
+             <INPUT name="tempe_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempe_pv</ADDRESS>
+            </INPUT>
+            
+        <!-- Estrategias -->
+            <!--Preditores de smith-->
+
+                <SMITH name="tc2402_smith">
+                    <MO>0</MO>
+                    <KP>-0.016</KP>
+                    <DT>20</DT>
+                    <LAG>100</LAG>	
+                </SMITH>
+                <LINK_BLOCKS><FROM>tempcv_pv.out</FROM><TO>tc2402_smith.pv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>vazao_ve21_in.out</FROM><TO>tc2402_smith.mv</TO></LINK_BLOCKS>
+
+                <LEADLAG name="smith_lag_tc2403">
+                    <MO>0</MO>
+                    <KP>1</KP>
+                    <DT>0.0</DT>
+                    <LEAD>0</LEAD>
+                    <LAG>59</LAG>
+                </LEADLAG>
+                <LINK_BLOCKS><FROM>tempsaida_pv.out</FROM><TO>smith_lag_tc2403.in</TO></LINK_BLOCKS>
+
+                <SMITH name="tc2403_smith">
+                    <MO>0</MO>
+                    <KP>0.19</KP>
+                    <DT>40</DT>
+                    <LAG>60</LAG>	
+                </SMITH>
+                <LINK_BLOCKS><FROM>smith_lag_tc2403.out</FROM><TO>tc2403_smith.pv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>vazao_gas_in.out</FROM><TO>tc2403_smith.mv</TO></LINK_BLOCKS>
+
+            <!-- Controladores -->
+
+                <NLPID name="tc2401">
+                    <MO>0</MO>
+                    <FFON>0</FFON>
+                    <ACTION>1</ACTION>
+                    <KC>6.58</KC>
+                    <TI>353</TI>
+                    <TD>107.93</TD>
+                    <PVMIN>0</PVMIN>
+                    <PVMAX>500</PVMAX>
+                    <MV>736.58</MV>
+                    <OUTMIN>1</OUTMIN>
+                    <OUTMAX>1260</OUTMAX>
+                </NLPID>
+                <LINK_BLOCKS><FROM>tempcl_sp.out</FROM><TO>tc2401.sp</TO></LINK_BLOCKS>    
+                <LINK_BLOCKS><FROM>tempcl_pv.out</FROM><TO>tc2401.pv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>tc2401_out.out</FROM><TO>tc2401.mv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>tc2401.out</FROM><TO>tc2401_out.in</TO></LINK_BLOCKS>
+
+                <OUTPUT name="tc2401_out">
+                    <ADDRESS>OPC:LOCAL|TCC.SECADOR2.vel_alim</ADDRESS>
+                <IN>736.5895</IN>
+                </OUTPUT>  
+
+                <NLPID name="tc2402">
+                    <MO>1</MO>
+                    <FFON>1</FFON>
+                    <ACTION>0</ACTION>
+                    <KC>-57.29</KC>
+                    <TI>110</TI>
+                    <TD>9.09</TD>
+                    <PVMIN>0</PVMIN>
+                    <PVMAX>1000</PVMAX>
+                    <MV>11873</MV>
+                    <OUTMIN>1</OUTMIN>
+                    <OUTMAX>51000</OUTMAX>
+                </NLPID>
+                <LINK_BLOCKS><FROM>tempcv_sp.out</FROM><TO>tc2402.sp</TO></LINK_BLOCKS>    
+                <LINK_BLOCKS><FROM>tempcv_pv.out</FROM><TO>tc2402.pv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>vazao_ve21_in.out</FROM><TO>tc2402.mv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>tc2402.out</FROM><TO>vazao_ve21_out.in</TO></LINK_BLOCKS> 
+            
+                <NLPID name="tc2403">
+                    <MO>1</MO>
+                    <FFON>1</FFON>
+                    <ACTION>1</ACTION>
+                    <KC>4.15</KC>
+                    <TI>139</TI>
+                    <TD>42.58</TD>
+                    <PVMIN>0</PVMIN>
+                    <PVMAX>1200</PVMAX>
+                    <MV>709.17</MV>
+                    <OUTMIN>1</OUTMIN>
+                    <OUTMAX>1200</OUTMAX>
+                </NLPID>
+                <LINK_BLOCKS><FROM>tempsaida_sp.out</FROM><TO>tc2403.sp</TO></LINK_BLOCKS>    
+                <LINK_BLOCKS><FROM>tempsaida_pv.out</FROM><TO>tc2403.pv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>vazao_gas_in.out</FROM><TO>tc2403.mv</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>tc2403.out</FROM><TO>vazao_gas_out.in</TO></LINK_BLOCKS>
+
+            <!-- Feed-Foward -->
+
+                <LEADLAG name="ff_ll_tc2403">
+                    <MO>1</MO>
+                    <KP>1</KP>
+                    <DT>0.0</DT>
+                    <LEAD>60</LEAD>
+                    <LAG>197</LAG>
+                </LEADLAG>
+                <LINK_BLOCKS><FROM>vel_alim_in.out</FROM><TO>ff_ll_tc2403.in</TO></LINK_BLOCKS>
+
+                <LEADLAG name="ff_tc2403">
+                    <MO>1</MO>
+                    <KP>0.9052</KP>
+                    <DT>0.0</DT>
+                    <LEAD>59</LEAD>
+                    <LAG>198</LAG>
+                </LEADLAG>
+                <LINK_BLOCKS><FROM>ff_ll_tc2403.out</FROM><TO>ff_tc2403.in</TO></LINK_BLOCKS>
+
+            <!-- Desacopladores -->
+
+                <LEADLAG name="dscpld_ll_tc2403">
+                    <MO>1</MO>
+                    <KP>1</KP>
+                    <DT>0.0</DT>
+                    <LEAD>60</LEAD>
+                    <LAG>79</LAG>
+                </LEADLAG>
+                <LINK_BLOCKS><FROM>tc2402.out</FROM><TO>dscpld_ll_tc2403.in</TO></LINK_BLOCKS>
+
+                <LEADLAG name="dscpld_tc2403">
+                    <MO>1</MO>
+                    <KP>-0.0421</KP>
+                    <DT>0.0</DT>
+                    <LEAD>59</LEAD>
+                    <LAG>80</LAG>
+                </LEADLAG>
+                <LINK_BLOCKS><FROM>dscpld_ll_tc2403.out</FROM><TO>dscpld_tc2403.in</TO></LINK_BLOCKS>
+
+                <LEADLAG name="dscpld_tc2402">
+                    <MO>1</MO>
+                    <KP>47.9375</KP>
+                    <DT>0.0</DT>
+                    <LEAD>100</LEAD>
+                    <LAG>253</LAG>
+                </LEADLAG>
+                <LINK_BLOCKS><FROM>tc2403.out</FROM><TO>dscpld_tc2402.in</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>dscpld_tc2402.out</FROM><TO>tc2402.ff</TO></LINK_BLOCKS>
+
+                <SUM name="sum_ff_tc2403">
+                    <NUM_INPUTS>2</NUM_INPUTS>
+                </SUM>
+                <LINK_BLOCKS><FROM>dscpld_tc2403.out</FROM><TO>sum_ff_tc2403.in1</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>ff_tc2403.out</FROM><TO>sum_ff_tc2403.in2</TO></LINK_BLOCKS>
+                <LINK_BLOCKS><FROM>sum_ff_tc2403.out</FROM><TO></TO>tc2403.ff</LINK_BLOCKS>
+
+        <!-- Output's -->	
+                <OUTPUT name="vazao_gas_out">
+                    <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_gas</ADDRESS>
+                    <IN>736.5895</IN>
+                </OUTPUT>      
+
+                <OUTPUT name="vazao_ve21_out">
+                    <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_ve21</ADDRESS>
+                    <IN>11873.08</IN>
+                </OUTPUT>
+
+                <OUTPUT name="vel_alim_out">
+                    <ADDRESS>OPC:LOCAL|TCC.SECADOR.vel_alim</ADDRESS>
+                </OUTPUT>
+    <!--CONTROL 2-->
+        <!-- Input's -->
+            <INPUT name="vazao_gas_in2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.vazao_gas</ADDRESS>
+            </INPUT>
+
+            <INPUT name="vazao_ve21_in2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.vazao_ve21</ADDRESS>
+            </INPUT>
+
+        <!-- PV (Temperatura de saída) -->
+            <INPUT name="tempsaida_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempsaida_pv</ADDRESS>
+            </INPUT>
+
+        <!-- PV (Temperatura da câmara livre) -->
+            <INPUT name="tempcl_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempcl_pv</ADDRESS>
+            </INPUT>
+
+        <!-- PV (Temperatura da caixa de vento) -->
+
+            <INPUT name="tempcv_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempcv_pv</ADDRESS>
+            </INPUT>
+
+        <!-- PV (Temperatura de entrada) -->
+            <INPUT name="tempe_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempe_pv</ADDRESS>
+            </INPUT>
+
+        <NLPID name="tc24012">
+            <MO>0</MO>
+            <FFON>0</FFON>
+            <ACTION>1</ACTION>
+            <KC>6.58</KC>
+            <TI>353</TI>
+            <TD>107.93</TD>
+            <PVMIN>0</PVMIN>
+            <PVMAX>300</PVMAX>
+            <MV>709.17</MV>
+            <OUTMIN>1</OUTMIN>
+        </NLPID>
+        <LINK_BLOCKS><FROM>tempcl_sp.out</FROM><TO>tc24012.sp</TO></LINK_BLOCKS>    
+        <LINK_BLOCKS><FROM>tempcl_pv2.out</FROM><TO>tc24012.pv</TO></LINK_BLOCKS>
+        <LINK_BLOCKS><FROM>vazao_gas_in2.out</FROM><TO>tc24012.mv</TO></LINK_BLOCKS>
+        <LINK_BLOCKS><FROM>tc24012.out</FROM><TO>vazao_gas_out2.in</TO></LINK_BLOCKS>
+
+        <NLPID name="tc24022">
+            <MO>1</MO>
+            <ACTION>1</ACTION>
+            <KC>-57.29</KC>
+            <TI>110</TI>
+            <TD>9.09</TD>
+            <PVMIN>0</PVMIN>
+            <PVMAX>1000</PVMAX>
+            <MV>11873</MV>
+            <OUTMIN>1</OUTMIN>
+            <OUTMAX>51000</OUTMAX>
+
+        </NLPID>
+        <LINK_BLOCKS><FROM>tempcv_sp.out</FROM><TO>tc24022.sp</TO></LINK_BLOCKS>    
+        <LINK_BLOCKS><FROM>tempcv_pv2.out</FROM><TO>tc24022.pv</TO></LINK_BLOCKS>
+        <LINK_BLOCKS><FROM>vazao_ve21_out2.out</FROM><TO>tc24022.mv</TO></LINK_BLOCKS> 
+        <LINK_BLOCKS><FROM>tc24022.out</FROM><TO>vazao_ve21_out2.in</TO></LINK_BLOCKS>
+
+        <NLPID name="tc24032">
+            <MO>1</MO>
+            <ACTION>1</ACTION>
+            <KC>4.15</KC>
+            <TI>139</TI>
+            <TD>42.58</TD>
+            <PVMIN>0</PVMIN>
+            <PVMAX>350</PVMAX>
+            <MV>736.58</MV>
+            <OUTMIN>1</OUTMIN>
+            <OUTMAX>1260</OUTMAX>
+        </NLPID>
+        <LINK_BLOCKS><FROM>tempsaida_sp.out</FROM><TO>tc24032.sp</TO></LINK_BLOCKS>    
+        <LINK_BLOCKS><FROM>tempsaida_pv2.out</FROM><TO>tc24032.pv</TO></LINK_BLOCKS>
+        <LINK_BLOCKS><FROM>vazao_gas_in2.out</FROM><TO>tc24032.mv</TO></LINK_BLOCKS> 
+        <LINK_BLOCKS><FROM>tc24032.out</FROM><TO>vazao_gas_out2.in</TO></LINK_BLOCKS>
+
+        <OUTPUT name="vazao_gas_out2">
+            <ADDRESS>OPC:LOCAL|TCC.SECADOR2.vazao_gas</ADDRESS>
+            <IN>709.17</IN>
+        </OUTPUT>      
+
+        <OUTPUT name="vazao_ve21_out2">
+            <ADDRESS>OPC:LOCAL|TCC.SECADOR2.vazao_ve21</ADDRESS>
+            <IN>11873.08</IN>
+        </OUTPUT>
+
+    <!-- ================================================================== -->
+</MODULE>

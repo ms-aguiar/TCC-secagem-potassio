@@ -1,0 +1,266 @@
+<MODULE texec = '100'>
+
+    <SAVEHISTORY>1000</SAVEHISTORY>
+
+    <INPUT name="tempsaida_sp">
+        <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempsaida_sp</ADDRESS>
+    </INPUT>
+
+    <INPUT name="step">
+        <ADDRESS>OPC:LOCAL|TCC.step</ADDRESS>
+        <IN>0</IN>
+    </INPUT>
+
+    <INPUT name="tempsaida_pv">
+        <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempsaida_pv</ADDRESS>
+    </INPUT>
+
+    <INPUT name="vazao_gas_in">
+        <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_gas</ADDRESS>
+    </INPUT>
+
+    <OUTPUT name="vazao_gas_out">
+        <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_gas</ADDRESS>
+    </OUTPUT> 
+
+    <NLPID name="tc2403">
+            <MO>1</MO>
+            <FFON>1</FFON>
+            <ACTION>1</ACTION>
+            <KC>4.15</KC>
+            <TI>139</TI>
+            <TD>42.58</TD>
+            <PVMIN>0</PVMIN>
+            <PVMAX>1200</PVMAX>
+            <MV>709.17</MV>
+            <OUTMIN>1</OUTMIN>
+            <OUTMAX>1200</OUTMAX>
+    </NLPID>
+    <LINK_BLOCKS><FROM>tempsaida_sp.out</FROM><TO>tc2403.sp</TO></LINK_BLOCKS>    
+    <LINK_BLOCKS><FROM>tempsaida_pv.out</FROM><TO>tc2403.pv</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM>vazao_gas_in.out</FROM><TO>tc2403.mv</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM>tc2403.out</FROM><TO>vazao_gas_out.in</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM>tc2403.out</FROM><TO>tfs_gas_temp_saida.in1</TO></LINK_BLOCKS>
+
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_gas_temp_caixa.vazao_gas</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_gas_temp_cl.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_gas_temp_entrada.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_gas_temp_saida.in1</TO></LINK_BLOCKS>
+
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_feeder_temp_caixa.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_feeder_temp_cl.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_feeder_temp_entrada.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_feeder_temp_saida.in1</TO></LINK_BLOCKS>
+
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_ve21_temp_caixa.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_ve21_temp_cl.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_ve21_temp_entrada.in1</TO></LINK_BLOCKS>
+    <LINK_BLOCKS><FROM></FROM><TO>tfs_ve21_temp_saida.in1</TO></LINK_BLOCKS>
+
+<!-- Função de transferência  -->
+    <TFS name="tfs_gas_temp_caixa">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_gas</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_caixa_vento</NAME>
+            <MIN>0</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_gas" nameout="temp_caixa_vento"> TYPE=[SOD] KP=0.767 TAU1=253 TAU2=0 DT=10</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_gas_temp_cl">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_gas</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_camara_livre</NAME>
+            <MIN>0</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_gas" nameout="temp_camara_livre">TYPE=[SOD] KP=0.134 TAU1=150 TAU2=153 DT=100</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_gas_temp_entrada">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_gas</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_entrada</NAME>
+            <MIN>0</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_gas" nameout="temp_entrada">TYPE=[SOD] KP=0.135 TAU1=73 TAU2=70 DT=20</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_gas_temp_saida">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_gas</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_saida</NAME>
+            <MIN>0</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_gas" nameout="temp_saida">TYPE=[SOD] KP=0.190 TAU1=59 TAU2=60 DT=40</TF>
+        
+    </TFS>
+
+<!-- Função de transferência -->
+
+    <TFS name="tfs_feeder_temp_caixa">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>feeder_velo</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_caixa_vento</NAME>
+            <MIN>-1</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="feeder_velo" nameout="temp_caixa_vento">TYPE=[SOD] KP=0 TAU1=0 TAU2=0 DT=0</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_feeder_temp_cl">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>feeder_velo</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_camara_livre</NAME>
+            <MIN>-1</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="feeder_velo" nameout="temp_camara_livre">TYPE=[SOD] KP=-0.223 TAU1=122 TAU2=117 DT=40</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_feeder_temp_entrada">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>feeder_velo</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_entrada</NAME>
+            <MIN>-1</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="feeder_velo" nameout="temp_entrada">TYPE=[SOD] KP=-0.165 TAU1=187 TAU2=38 DT=20</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_feeder_temp_saida">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>feeder_velo</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_saida</NAME>
+            <MIN>-1</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="feeder_velo" nameout="temp_saida">TYPE=[SOD] KP=-0.172 TAU1=198 TAU2=197 DT=40</TF>
+        
+    </TFS>
+
+<!-- Função de transferência -->
+
+    <TFS name="tfs_ve21_temp_caixa">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_ve21</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_caixa_vento</NAME>
+            <MIN>-1</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_ve21" nameout="temp_caixa_vento">TYPE=[SOD] KP=-0.016 TAU1=100 TAU2=0 DT=20</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_ve21_temp_cl">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_ve21</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_camara_livre</NAME>
+            <MIN>0</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_ve21" nameout="temp_camara_livre">TYPE=[SOD] KP=0.004 TAU1=110 TAU2=108 DT=80</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_ve21_temp_entrada">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_ve21</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_entrada</NAME>
+            <MIN>0</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_ve21" nameout="temp_entrada">TYPE=[SOD] KP=0.004 TAU1=61 TAU2=60 DT=40</TF>
+        
+    </TFS>
+
+    <TFS name="tfs_ve21_temp_saida">
+        <NUM_INPUTS>1</NUM_INPUTS>
+        <IN1>
+            <NAME>vazao_ve21</NAME>
+            <MIN>0</MIN><MAX>2000</MAX><INIT>0</INIT>
+        </IN1>
+        <NUM_OUTPUTS>1</NUM_OUTPUTS>
+        <OUT1>
+            <NAME>temp_saida</NAME>
+            <MIN>0</MIN><MAX>750</MAX><INIT>0</INIT><NOISE>0</NOISE>
+        </OUT1>
+
+        <TF namein="vazao_ve21" nameout="temp_saida">TYPE=[SOD] KP=0.008 TAU1=80 TAU2=79 DT=40</TF>
+        
+    </TFS>
+</MODULE>
+
+        
+        
+        
+        
+
+        
+        
+        
+        

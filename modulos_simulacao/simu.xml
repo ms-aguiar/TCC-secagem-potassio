@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<MODULE texec="1000">
+
+    <!-- ================================================================== -->
+	<!--      Secador de leito fluidizado                                   -->
+    <!-- ================================================================== -->
+        <!-- Le Setpoint (Vazão de gás) -->
+            <INPUT name="vazao_gas">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_gas</ADDRESS>
+            </INPUT>
+
+        <!-- Le Setpoint (vazao VE21) -->
+            <INPUT name="vazao_ve21">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.vazao_ve21</ADDRESS>
+            </INPUT>
+
+        <!-- Le Setpoint (Alimentacao) -->
+            <INPUT name="alimentacao_vel">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.vel_alim</ADDRESS>
+            </INPUT>
+
+        <!-- Função de transferência  -->
+            <TFS name="tfs_secador">
+                <NUM_INPUTS>3</NUM_INPUTS>
+                <IN1>
+                    <NAME>vazao_gas</NAME>
+                    <MIN>0</MIN><MAX>1200</MAX><INIT>709.17</INIT>
+                </IN1>
+                <IN2>
+                    <NAME>vazao_ve21</NAME>
+                    <MIN>0</MIN><MAX>53000</MAX><INIT>11873</INIT>
+                </IN2>
+                <IN3>
+                    <NAME>alimentacao_vel</NAME>
+                    <MIN>0</MIN><MAX>2000</MAX><INIT>1033.7</INIT>
+                </IN3>
+                <NUM_OUTPUTS>4</NUM_OUTPUTS>
+                <OUT1>
+                    <NAME>temp_saida</NAME>
+                    <MIN>0</MIN><MAX>350</MAX><INIT>121.9</INIT><NOISE>0</NOISE>
+                </OUT1>
+                <OUT2>
+                    <NAME>temp_camara_livre</NAME>
+                    <MIN>0</MIN><MAX>300</MAX><INIT>100</INIT><NOISE>0</NOISE>
+                </OUT2>
+                <OUT3>
+                    <NAME>temp_caixa_vento</NAME>
+                    <MIN>0</MIN><MAX>1000</MAX><INIT>719.66</INIT><NOISE>0</NOISE>
+                </OUT3>
+                <OUT4>
+                    <NAME>temp_entrada</NAME>
+                    <MIN>0</MIN><MAX>245</MAX><INIT>102.89</INIT><NOISE>0</NOISE>
+                </OUT4>
+
+                <TF namein="vazao_gas" nameout="temp_caixa_vento">TYPE=[SOD] KP=0.767 TAU1=253 TAU2=0 DT=20</TF>
+                <TF namein="vazao_gas" nameout="temp_camara_livre">TYPE=[SOD] KP=0.134 TAU1=150 TAU2=153 DT=100</TF>
+                <TF namein="vazao_gas" nameout="temp_entrada">TYPE=[SOD] KP=0.135 TAU1=73 TAU2=70 DT=20</TF>
+                <TF namein="vazao_gas" nameout="temp_saida">TYPE=[SOD] KP=0.190 TAU1=59 TAU2=60 DT=40</TF>
+
+                <TF namein="vazao_ve21" nameout="temp_caixa_vento">TYPE=[SOD] KP=-0.016 TAU1=100 TAU2=0 DT=20</TF>
+                <TF namein="vazao_ve21" nameout="temp_camara_livre">TYPE=[SOD] KP=0.004 TAU1=110 TAU2=108 DT=80</TF>
+                <TF namein="vazao_ve21" nameout="temp_entrada">TYPE=[SOD] KP=0.004 TAU1=61 TAU2=60 DT=40</TF>
+                <TF namein="vazao_ve21" nameout="temp_saida">TYPE=[SOD] KP=0.008 TAU1=80 TAU2=79 DT=40</TF>
+
+                <TF namein="alimentacao_vel" nameout="temp_caixa_vento">TYPE=[SOD] KP=0 TAU1=0 TAU2=0 DT=0</TF>
+                <TF namein="alimentacao_vel" nameout="temp_camara_livre">TYPE=[SOD] KP=-0.223 TAU1=122 TAU2=117 DT=40</TF>
+                <TF namein="alimentacao_vel" nameout="temp_entrada">TYPE=[SOD] KP=-0.165 TAU1=187 TAU2=38 DT=20</TF>
+                <TF namein="alimentacao_vel" nameout="temp_saida">TYPE=[SOD] KP=-0.172 TAU1=198 TAU2=197 DT=40</TF>
+                
+            </TFS>
+
+            <LINK_BLOCKS><FROM>vazao_gas.out</FROM><TO>tfs_secador.vazao_gas</TO></LINK_BLOCKS>
+            <LINK_BLOCKS><FROM>vazao_ve21.out</FROM><TO>tfs_secador.vazao_ve21</TO></LINK_BLOCKS>
+            <LINK_BLOCKS><FROM>alimentacao_vel.out</FROM><TO>tfs_secador.alimentacao_vel</TO></LINK_BLOCKS>
+
+        <!-- Perturbação (Temperatura de saída) -->
+            <LEADLAG name="pert_temp_saida">
+                <IN>0</IN><KP>1</KP><LAG>5</LAG>
+            </LEADLAG >
+            <SUM name="sum_temp_saida"></SUM>
+
+        <!-- Perturbação (Temperatura da câmara livre) -->
+            <LEADLAG name="pert_temp_cl">
+                <IN>0</IN><KP>1</KP><LAG>5</LAG>
+            </LEADLAG >
+            <SUM name="sum_temp_cl"></SUM>
+
+        <!-- Perturbação (Temperatura da caixa de vento) -->
+            <LEADLAG name="pert_temp_cv">
+                <IN>0</IN><KP>1</KP><LAG>5</LAG>
+            </LEADLAG >
+            <SUM name="sum_temp_cv"></SUM>
+
+        <!-- Perturbação (Temperatura de entrada) -->
+            <LEADLAG name="pert_temp_e">
+                <IN>0</IN><KP>1</KP><LAG>5</LAG>
+            </LEADLAG >
+            <SUM name="sum_temp_e"></SUM>
+
+        <!-- Escreve (Temperatura de saída) -->	
+            <OUTPUT name="tempsaida_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempsaida_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador.temp_saida</FROM><TO>tempsaida_pv.in</TO></LINK_BLOCKS>
+        
+        <!-- Escreve saída (Temperatura da câmara livre) -->	
+            <OUTPUT name="tempcl_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempcl_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador.temp_camara_livre</FROM><TO>tempcl_pv.in</TO></LINK_BLOCKS>
+
+        <!-- Escreve (Temperatura da caixa de vento) -->	
+            <OUTPUT name="tempcv_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempcv_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador.temp_caixa_vento</FROM><TO>tempcv_pv.in</TO></LINK_BLOCKS>
+        
+        <!-- Escreve (Temperatura de entrada) -->	
+
+            <OUTPUT name="tempe_pv">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.tempe_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador.temp_entrada</FROM><TO>tempe_pv.in</TO></LINK_BLOCKS>
+
+    <!--TFS 2-->
+        <!-- Le Setpoint (Vazão de gás) -->
+            <INPUT name="vazao_gas2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.vazao_gas</ADDRESS>
+            </INPUT>
+
+        <!-- Le Setpoint (vazao VE21) -->
+            <INPUT name="vazao_ve212">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.vazao_ve21</ADDRESS>
+            </INPUT>
+
+        <!-- Le Setpoint (Alimentacao) -->
+            <INPUT name="alimentacao_vel2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR.vel_alim</ADDRESS>
+            </INPUT>
+
+            <TFS name="tfs_secador2">
+                <NUM_INPUTS>3</NUM_INPUTS>
+                <IN1>
+                    <NAME>vazao_gas</NAME>
+                    <MIN>0</MIN><MAX>1200</MAX><INIT>709.17</INIT>
+                </IN1>
+                <IN2>
+                    <NAME>vazao_ve21</NAME>
+                    <MIN>0</MIN><MAX>53000</MAX><INIT>11873</INIT>
+                </IN2>
+                <IN3>
+                    <NAME>alimentacao_vel</NAME>
+                    <MIN>0</MIN><MAX>2000</MAX><INIT>1033.7</INIT>
+                </IN3>
+                <NUM_OUTPUTS>4</NUM_OUTPUTS>
+                <OUT1>
+                    <NAME>temp_saida</NAME>
+                    <MIN>0</MIN><MAX>350</MAX><INIT>121.9</INIT><NOISE>0</NOISE>
+                </OUT1>
+                <OUT2>
+                    <NAME>temp_camara_livre</NAME>
+                    <MIN>0</MIN><MAX>300</MAX><INIT>100</INIT><NOISE>0</NOISE>
+                </OUT2>
+                <OUT3>
+                    <NAME>temp_caixa_vento</NAME>
+                    <MIN>0</MIN><MAX>1000</MAX><INIT>719.66</INIT><NOISE>0</NOISE>
+                </OUT3>
+                <OUT4>
+                    <NAME>temp_entrada</NAME>
+                    <MIN>0</MIN><MAX>245</MAX><INIT>102.89</INIT><NOISE>0</NOISE>
+                </OUT4>
+
+                <TF namein="vazao_gas" nameout="temp_caixa_vento">TYPE=[SOD] KP=0.767 TAU1=253 TAU2=0 DT=20</TF>
+                <TF namein="vazao_gas" nameout="temp_camara_livre">TYPE=[SOD] KP=0.134 TAU1=150 TAU2=153 DT=100</TF>
+                <TF namein="vazao_gas" nameout="temp_entrada">TYPE=[SOD] KP=0.135 TAU1=73 TAU2=70 DT=20</TF>
+                <TF namein="vazao_gas" nameout="temp_saida">TYPE=[SOD] KP=0.190 TAU1=59 TAU2=60 DT=40</TF>
+
+                <TF namein="vazao_ve21" nameout="temp_caixa_vento">TYPE=[SOD] KP=-0.016 TAU1=100 TAU2=0 DT=20</TF>
+                <TF namein="vazao_ve21" nameout="temp_camara_livre">TYPE=[SOD] KP=0.004 TAU1=110 TAU2=108 DT=80</TF>
+                <TF namein="vazao_ve21" nameout="temp_entrada">TYPE=[SOD] KP=0.004 TAU1=61 TAU2=60 DT=40</TF>
+                <TF namein="vazao_ve21" nameout="temp_saida">TYPE=[SOD] KP=0.008 TAU1=80 TAU2=79 DT=40</TF>
+
+                <TF namein="alimentacao_vel" nameout="temp_caixa_vento">TYPE=[SOD] KP=0 TAU1=0 TAU2=0 DT=0</TF>
+                <TF namein="alimentacao_vel" nameout="temp_camara_livre">TYPE=[SOD] KP=-0.223 TAU1=122 TAU2=117 DT=40</TF>
+                <TF namein="alimentacao_vel" nameout="temp_entrada">TYPE=[SOD] KP=-0.165 TAU1=187 TAU2=38 DT=20</TF>
+                <TF namein="alimentacao_vel" nameout="temp_saida">TYPE=[SOD] KP=-0.172 TAU1=198 TAU2=197 DT=40</TF>
+                
+            </TFS>
+
+            <LINK_BLOCKS><FROM>vazao_gas2.out</FROM><TO>tfs_secador2.vazao_gas</TO></LINK_BLOCKS>
+            <LINK_BLOCKS><FROM>vazao_ve212.out</FROM><TO>tfs_secador2.vazao_ve21</TO></LINK_BLOCKS>
+            <LINK_BLOCKS><FROM>alimentacao_vel2.out</FROM><TO>tfs_secador2.alimentacao_vel</TO></LINK_BLOCKS>
+
+            <OUTPUT name="tempsaida_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempsaida_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador2.temp_saida</FROM><TO>tempsaida_pv2.in</TO></LINK_BLOCKS>
+        
+        <!-- Escreve saída (Temperatura da câmara livre) -->	
+            <OUTPUT name="tempcl_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempcl_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador2.temp_camara_livre</FROM><TO>tempcl_pv2.in</TO></LINK_BLOCKS>
+
+        <!-- Escreve (Temperatura da caixa de vento) -->	
+            <OUTPUT name="tempcv_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempcv_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador2.temp_caixa_vento</FROM><TO>tempcv_pv2.in</TO></LINK_BLOCKS>
+        
+        <!-- Escreve (Temperatura de entrada) -->	
+            <OUTPUT name="tempe_pv2">
+                <ADDRESS>OPC:LOCAL|TCC.SECADOR2.tempe_pv</ADDRESS>
+            </OUTPUT>
+            <LINK_BLOCKS><FROM>tfs_secador2.temp_entrada</FROM><TO>tempe_pv2.in</TO></LINK_BLOCKS>
+    <!-- ================================================================== -->
+</MODULE>
